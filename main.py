@@ -37,6 +37,7 @@ lstmModel=model.LSTM_Model(
 
 
 sess.run(tf.global_variables_initializer())
+result_dic={}
 for i in range(1000):
     #epoch start
     start_time = time.time()
@@ -58,7 +59,12 @@ for i in range(1000):
     elapsed_time = time.time()-start_time
     training_cost=training_cost/kospi.batchNum
     evalution_cost=evalution_cost/kospi.batchNum
+    result_dic[i]=[training_cost,evalution_cost]
 
     print('epoch : {}, t_cost : {:0.6f}, e_cost : {:0.6f}, elapsed time : {:0.2f}sec'.format(
         i,training_cost,evalution_cost,elapsed_time))
-    
+#
+sorted_result=sorted(result_dic,key=lambda k:result_dic[k][1])
+bestEpoch=sorted_result[0]
+print('\n#Best result at epoch {}'.format(bestEpoch))
+print('t_cost : {:0.6f}, e_cost : {:0.6f}'.format(result_dic[bestEpoch][0],result_dic[bestEpoch][1]))
