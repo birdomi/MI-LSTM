@@ -133,28 +133,45 @@ class Attention_Layer():
     def __init__(
         self,
         timewindow_size,
-        input_hidden_unit_size):
-
+        input_hidden_unit_size,
+        attention_size=None):
+        """
+        Setting parameter for attention layer.
+        args:
+            timewindow_size = time window size of previous lstm layer.
+            input_hidden_unit_size = hidden unit number of previous lstm layer.
+            attention_size = size of this attention. 
+                default = input_hidden_unit_size.
+        """
+        if(attention_size is None):
+            attention_size=input_hidden_unit_size
+        self.o_size=attention_size
         self.h_size=input_hidden_unit_size
         self.t_size=timewindow_size
 
-        self.beta_weight=tf.Variable(tf.random_normal([self.h_size,self.h_size]), name='beta_weight')
-        self.beta_bias=tf.Variable(tf.zeros([self.h_size]),name='beta_bias')
+        self.beta_weight=tf.Variable(tf.random_normal([self.h_size,self.o_size]), name='beta_weight')
+        self.beta_bias=tf.Variable(tf.zeros([self.o_size]),name='beta_bias')
 
-        self.v=tf.Variable(tf.random_normal([self.h_size,1]),name='beta_v')
+        self.v=tf.Variable(tf.random_normal([self.o_size,1]),name='beta_v')
 
     def __call__(self,inputs):
-        #temp = tanh(Y X W + b)
-        temp=tf.reshape(tf.matmul(tf.reshape(inputs,[-1,self.h_size]),self.beta_weight),[-1,self.t_size,self.h_size])
+        """
+        producing output with actual inputs.
+
+        shape of output will be (batch_size, 1, input_hidden_unit_size).
+        """
+        #temp = tanh(Y X W + b) ->shape of result = (-1, self.o_size)
+        temp=tf.matmul(tf.reshape(inputs,[-1,self.h_size]),self.beta_weight)
         temp=tf.tanh(temp+self.beta_bias)
             
         #j=temp X v
-        j=tf.reshape(tf.matmul(tf.reshape(temp,[-1,self.h_size]),self.v),[-1,self.t_size,1])
+        j=tf.reshape(tf.matmul(temp,self.v),[-1,self.t_size,1])
 
         beta=tf.nn.softmax(j)
 
         output=beta*inputs
         return output
+
 
 
         
