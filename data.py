@@ -36,6 +36,7 @@ class StockData():
         self.folderPath = folderPath      
         self.indexPath=indexPath    
         self.batchSize=batchSize
+        self.date_duration=3000
         
         self.train_test_rate=train_test_rate
         self.scaler=MinMaxScaler(feature_range=(-1,1))  
@@ -46,7 +47,7 @@ class StockData():
 
         self.trainSet,self.testSet=self.make_dataset()
 
-        self.batchNum=None
+        self.batchNum={}
     
     def getBatch(self,option):
         """
@@ -88,7 +89,7 @@ class StockData():
         #print(y.shape,xp.shape,xn.shape,xi.shape,target.shape)     
 
         batchNum=int(len(y)/self.batchSize)
-        self.batchNum=batchNum
+        self.batchNum[option]=batchNum
 
         for i in range(batchNum):
             yield {'y':y[i*self.batchSize:(i+1)*self.batchSize],
@@ -103,11 +104,12 @@ class StockData():
         """
         csvList=os.listdir(self.folderPath)        
         dataframe = pd.DataFrame([])
+        
 
         for csv in csvList:
             data=pd.read_csv(self.folderPath+'/'+csv,engine='python')
-            if(len(data)>1000):
-                data=data[-1001:-1]
+            if(len(data)>self.date_duration):
+                data=data[-self.date_duration-1:-1]
                 data=data.reset_index()
                 data=data['시가']
 
@@ -123,7 +125,7 @@ class StockData():
     
     def loadIndex(self):
         data=pd.read_csv(self.indexPath,engine='python')
-        data=data[-1001:-1]        
+        data=data[-self.date_duration-1:-1]        
         data=data.reset_index()
         data=data.fillna(method='ffill')
 
